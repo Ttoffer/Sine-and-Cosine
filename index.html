@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sine & Cosine from the Unit Circle</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #1a2332;
+      --text: #e8eef4;
+      --muted: #8b9cb3;
+      --accent: #3d9eff;
+      --sin: #ff6b6b;
+      --cos: #4ecdc4;
+      --grid: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+    .help-btn {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .help-btn:hover {
+      background: rgba(61, 158, 255, 0.15);
+      border-color: var(--accent);
+    }
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 2rem;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 1rem 1.25rem;
+      padding: 1rem;
+      background: var(--panel);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .control-group label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+    .wave-mode {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .wave-mode label.opt {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .wave-mode label.opt.opt-sin { color: var(--sin); }
+    .wave-mode label.opt.opt-cos { color: var(--cos); }
+    .wave-mode input { accent-color: var(--accent); }
+    .wave-mode label.opt.opt-sin input { accent-color: var(--sin); }
+    .wave-mode label.opt.opt-cos input { accent-color: var(--cos); }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 180px;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      min-width: 100px;
+    }
+    .slider-row .val {
+      font-variant-numeric: tabular-nums;
+      min-width: 3.25rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    button.ctl {
+      padding: 0.45rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    button.ctl:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    button.ctl.primary {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .canvas-wrap {
+      background: var(--panel);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      vertical-align: middle;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .swatch {
+      width: 14px;
+      height: 3px;
+      border-radius: 1px;
+    }
+    .swatch.sin { background: var(--sin); }
+    .swatch.cos { background: var(--cos); }
+    .swatch.period { background: rgba(255, 255, 255, 0.25); height: 8px; width: 2px; border-radius: 0; }
+    .swatch.theta-t { background: #7ec8ff; height: 3px; }
+    .swatch.omega-t { background: #c8e86c; height: 3px; }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 1rem;
+    }
+    .overlay.open { display: flex; }
+    .help-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-width: 540px;
+      max-height: 90vh;
+      overflow: auto;
+      padding: 1.25rem 1.5rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    .help-panel h2 {
+      margin: 0 0 0.75rem;
+      font-size: 1.1rem;
+    }
+    .help-panel p, .help-panel li {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0 0 0.75rem;
+    }
+    .help-panel ul { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+    .help-panel strong { color: var(--text); }
+    .help-close {
+      float: right;
+      margin: -0.25rem 0 0 0.5rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .help-close:hover { background: rgba(255, 255, 255, 0.06); }
+
+    .euler-panel {
+      margin-bottom: 1rem;
+      padding: 1rem 1.25rem;
+      background: rgba(61, 158, 255, 0.08);
+      border: 1px solid rgba(61, 158, 255, 0.25);
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+    .euler-panel.hidden { display: none; }
+    .euler-panel h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .euler-panel p {
+      margin: 0 0 0.65rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+    .euler-panel .eq {
+      font-family: "Cambria Math", "Times New Roman", Times, serif;
+      font-size: 1.05rem;
+      color: var(--text);
+      margin: 0.35rem 0;
+    }
+    .euler-panel .live {
+      margin-top: 0.75rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid var(--border);
+      font-variant-numeric: tabular-nums;
+    }
+    .euler-panel .live div { margin: 0.25rem 0; color: var(--text); }
+    .euler-panel kbd {
+      font-family: inherit;
+      font-style: italic;
+      color: rgba(232, 238, 244, 0.9);
+    }
+    .control-group label.opt-euler {
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: 0.9rem;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+    }
+    .control-group label.opt-euler input { accent-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Sine &amp; cosine from the unit circle</h1>
+    <button type="button" class="help-btn" id="helpOpen" aria-label="Help">?</button>
+  </header>
+  <main>
+    <div class="controls">
+      <div class="control-group">
+        <span class="label-like">Show</span>
+        <div class="wave-mode" role="radiogroup" aria-label="Which waves to show">
+          <label class="opt opt-sin"><input type="radio" name="mode" value="sin" /> Sine only</label>
+          <label class="opt opt-cos"><input type="radio" name="mode" value="cos" /> Cosine only</label>
+          <label class="opt"><input type="radio" name="mode" value="both" checked /> Both</label>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Playback</label>
+        <div class="btn-row">
+          <button type="button" class="ctl primary" id="playPause" aria-pressed="false">Pause</button>
+          <button type="button" class="ctl" id="stepBtn" title="Advance θ by one step">Step θ</button>
+          <button type="button" class="ctl" id="resetBtn" title="θ=0, φ=0: radius at (1,0); clear wave traces; pause">Reset (1, 0)</button>
+          <button type="button" class="ctl" id="startAgainBtn" title="Resume animation from current state">Start again</button>
+        </div>
+      </div>
+      <div class="control-group">
+        <label>Angle axis</label>
+        <div class="wave-mode">
+          <label class="opt"><input type="radio" name="angUnit" value="rad" checked /> Radians</label>
+          <label class="opt"><input type="radio" name="angUnit" value="deg" /> Degrees</label>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="speed">Rotation speed</label>
+        <div class="slider-row">
+          <input type="range" id="speed" min="0.15" max="3" step="0.05" value="0.4" />
+          <span class="val" id="speedVal">0.40×</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="revs">Revolutions per cycle</label>
+        <div class="slider-row">
+          <input type="range" id="revs" min="2" max="4" step="1" value="3" />
+          <span class="val" id="revsVal">3</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="amplitude">Amplitude (radius r)</label>
+        <div class="slider-row">
+          <input type="range" id="amplitude" min="0.5" max="1.5" step="0.05" value="1" />
+          <span class="val" id="ampVal">1.00</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="phase">Phase φ (rad)</label>
+        <div class="slider-row">
+          <input type="range" id="phase" min="-3.14159" max="3.14159" step="0.07854" value="0" />
+          <span class="val" id="phaseVal">0</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="omega">ω base (rad/s), dθ/dt = ω(t)</label>
+        <div class="slider-row">
+          <input type="range" id="omega" min="0.5" max="4" step="0.05" value="1.5" />
+          <span class="val" id="omegaVal">1.50</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="omegaVar">ω variation (0 = constant)</label>
+        <div class="slider-row">
+          <input type="range" id="omegaVar" min="0" max="0.95" step="0.05" value="0" />
+          <span class="val" id="omegaVarVal">0%</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label for="omegaPattern">ω vs time pattern</label>
+        <select id="omegaPattern" style="padding:0.4rem 0.5rem;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:0.9rem;max-width:18rem;">
+          <option value="const" selected>Constant ω</option>
+          <option value="sine">Sinusoidal ω(t) (FM-style)</option>
+          <option value="chirpUp">Ramp ω up each segment</option>
+          <option value="chirpDown">Ramp ω down each segment</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Export</label>
+        <button type="button" class="ctl" id="exportPng">Save PNG</button>
+      </div>
+      <div class="control-group">
+        <label>Complex numbers</label>
+        <label class="opt-euler">
+          <input type="checkbox" id="eulerToggle" />
+          Show Euler / complex plane notes
+        </label>
+      </div>
+    </div>
+
+    <div id="eulerPanel" class="euler-panel hidden" aria-live="polite">
+      <h3>Complex plane and e<sup>iα</sup></h3>
+      <p>
+        The circle is the Gaussian plane: the horizontal axis is the <strong>real</strong> part, the vertical axis is the
+        <strong>imaginary</strong> part. The moving tip is the complex number
+        <span class="eq">z = r e<sup>iα</sup> = r cos α + i r sin α</span>
+        with <kbd>α = θ + φ</kbd> (same angle as on the diagram). Euler’s identity links rotation to cosine and sine:
+        <span class="eq">e<sup>iα</sup> = cos α + i sin α</span>, so <kbd>Re(z) = r cos α</kbd> and <kbd>Im(z) = r sin α</kbd>
+        match the teal and coral projections. With time, <kbd>α(t) = ∫ω dt + φ</kbd> (or <kbd>ωt + φ</kbd> when ω is
+        constant) gives <span class="eq">z(t) = r e<sup>iα(t)</sup></span> — constant |z| = r; if ω varies, phase
+        advances faster or slower over time.
+      </p>
+      <div class="live" id="eulerLive">
+        <div>α = <span id="eulerAlpha"></span></div>
+        <div>e<sup>iα</sup> = <span id="eulerRect"></span></div>
+        <div>z = r e<sup>iα</sup> = <span id="eulerZ"></span></div>
+        <div>|z| = <span id="eulerMod"></span></div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="cv" width="1000" height="760"></canvas>
+      <div class="legend" id="legend">
+        <span data-show="sin both"><i class="swatch sin"></i> sin(θ+φ)</span>
+        <span data-show="cos both"><i class="swatch cos"></i> cos(θ+φ)</span>
+        <span><i class="swatch period"></i> one period (2π along θ)</span>
+        <span><i class="swatch theta-t"></i> θ(t)=∫ω dt</span>
+        <span><i class="swatch omega-t"></i> ω(t)</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-panel">
+      <button type="button" class="help-close" id="helpClose">Close</button>
+      <h2 id="helpTitle">What you are seeing</h2>
+      <p>
+        A radius of length <strong>r</strong> starts along the positive <strong>x</strong>-axis and turns
+        <strong>counter-clockwise</strong>. The angle from the x-axis is <strong>θ</strong>. The moving dot is at
+        angle <strong>θ + φ</strong> on the circle (phase <strong>φ</strong> rotates the whole picture).
+      </p>
+      <p>
+        The tip is at <strong>(r cos(θ+φ), r sin(θ+φ))</strong>. The upper graph plots
+        <strong>sin(θ+φ)</strong> and/or <strong>cos(θ+φ)</strong> versus <strong>θ</strong> (horizontal axis).
+        One full turn in θ is <strong>2π</strong> radians — that horizontal span is one wavelength.
+      </p>
+      <p>
+        The <strong>lower panels</strong> share the same simulation time <strong>t</strong> as the integration
+        <strong>dθ/dt = ω(t)</strong>, so <strong>θ(t) = ∫₀ᵗ ω(τ) dτ</strong> (when ω is constant this is
+        <strong>ωt</strong>). The <strong>top strip</strong> plots <strong>θ(t)</strong>; its slope at any instant
+        is <strong>ω(t)</strong>.         The <strong>bottom strip</strong> plots <strong>ω(t)</strong> — flat when ω is constant, or curved with
+        <strong>variation</strong> + <strong>pattern</strong> (sinusoidal FM, or ramp ω up/down each segment). For ramps,
+        the pattern repeats every <strong>T_nom ≈ (revolutions × 2π) / ω_base</strong> seconds — that is only how often
+        the ramp restarts, not necessarily when θ completes a cycle. When θ reaches <strong>revolutions × 2π</strong>,
+        both <strong>t</strong> and the displayed θ reset to 0. <strong>Pause</strong> and <strong>Step θ</strong> advance
+        θ and t together.
+      </p>
+      <p><strong>Controls</strong></p>
+      <ul>
+        <li><strong>Show</strong> — sine, cosine, or both.</li>
+        <li><strong>Playback</strong> — pause/resume; step advances θ by a fixed small amount.</li>
+        <li><strong>Reset (1, 0)</strong> — sets θ and t to 0, φ to 0 so the radius lies on the positive x-axis (x=1, y=0 on the unit circle), clears drawn waves, and pauses.</li>
+        <li><strong>Start again</strong> — resumes playback from the current θ and t.</li>
+        <li><strong>Angle axis</strong> — tick labels under the θ-graph in radians or degrees.</li>
+        <li><strong>Rotation speed</strong> — how fast θ advances (and time t on the lower graph).</li>
+        <li><strong>Revolutions per cycle</strong> — θ resets after this many turns.</li>
+        <li><strong>Amplitude (r)</strong> — scales circle and wave heights.</li>
+        <li><strong>Phase φ</strong> — horizontal shift of the waves; rotates the radius on the circle.</li>
+        <li><strong>ω base</strong> — centre angular frequency (rad/s); <strong>dθ/dt = ω(t)</strong>.</li>
+        <li><strong>ω variation</strong> — 0 keeps ω constant; larger values let the pattern swing ω up/down around the base.</li>
+        <li><strong>ω vs time pattern</strong> — constant; sinusoidal ω(t); or ramp ω up/down each segment (segment length
+          ≈ time for one full θ-cycle at ω base, used only to repeat the ramp).</li>
+        <li><strong>Save PNG</strong> — download a snapshot of the canvas.</li>
+        <li><strong>Show Euler / complex plane notes</strong> — optional panel and on-canvas Re/Im labels linking the circle to
+          <strong>z = r e<sup>iα</sup></strong> and live numeric values.</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  const canvas = document.getElementById("cv");
+  const ctx = canvas.getContext("2d");
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  const COL = { sin: "#ff6b6b", cos: "#4ecdc4", grid: "rgba(255,255,255,0.08)", axis: "rgba(255,255,255,0.35)", faint: "rgba(255,255,255,0.12)", border: "rgba(255,255,255,0.12)" };
+
+  let mode = "both";
+  let speedMul = 0.4;
+  let numRevs = 3;
+  let amplitude = 1;
+  let phi = 0;
+  let omegaTime = 1.5;
+  let omegaVarDepth = 0;
+  let omegaPattern = "const";
+  let timeT = 0;
+  let thetaAccum = 0;
+  let playing = true;
+  let useDegrees = false;
+  let showEuler = false;
+  let lastT = performance.now();
+
+  const TWO_PI = Math.PI * 2;
+  const THETA_STEP = TWO_PI / 72;
+
+  function omegaMinApprox() {
+    const w0 = omegaTime;
+    const v = omegaVarDepth;
+    if (omegaPattern === "const" || v < 1e-6) return w0;
+    if (omegaPattern === "sine") return Math.max(0.2, w0 * (1 - v));
+    if (omegaPattern === "chirpUp" || omegaPattern === "chirpDown") return Math.max(0.2, w0 * (1 - v));
+    return w0 * (1 - v);
+  }
+
+  /** ω(t) with t in simulation seconds (same t as lower graphs). Chirp ramps repeat every tNom ≈ maxTheta/w0. */
+  function omegaAt(t) {
+    const w0 = omegaTime;
+    const v = omegaVarDepth;
+    if (omegaPattern === "const" || v < 1e-6) return w0;
+    const tNom = Math.max(0.8, maxTheta() / w0);
+    if (omegaPattern === "sine") {
+      const Tp = Math.max(1.0, tNom / 2.2);
+      return w0 * (1 + v * Math.sin((TWO_PI * t) / Tp));
+    }
+    if (omegaPattern === "chirpUp") {
+      const u = (t % tNom) / tNom;
+      return w0 * (1 - v + v * 2 * u);
+    }
+    if (omegaPattern === "chirpDown") {
+      const u = (t % tNom) / tNom;
+      return w0 * (1 + v - v * 2 * u);
+    }
+    return w0;
+  }
+
+  /** Horizontal span (s) for one lower-panel time axis */
+  function timeAxisSec() {
+    const mt = maxTheta();
+    const wmin = omegaMinApprox();
+    return Math.min(28, Math.max(3.5, (mt / wmin) * 1.28));
+  }
+
+  function omegaMaxOnWindow(tw) {
+    let mx = omegaTime;
+    const n = 64;
+    for (let i = 0; i <= n; i++) {
+      mx = Math.max(mx, omegaAt((i / n) * tw));
+    }
+    return mx * 1.1;
+  }
+
+  /** Build θ(t)=∫ω dt from 0..tMax (one pass per frame for drawing) */
+  function buildThetaLUT(tMax, segments) {
+    const n = Math.max(24, Math.min(220, segments));
+    const lutT = [0];
+    const lutTh = [0];
+    let th = 0;
+    const dt = tMax / n;
+    for (let i = 1; i <= n; i++) {
+      const tPrev = (i - 1) * dt;
+      const tMid = tPrev + dt * 0.5;
+      const om = omegaAt(tMid);
+      th += om * dt;
+      lutT.push(i * dt);
+      lutTh.push(th);
+    }
+    return { lutT, lutTh };
+  }
+
+  function thetaFromLUT(lut, t) {
+    if (t <= 0) return 0;
+    const { lutT, lutTh } = lut;
+    const last = lutT.length - 1;
+    if (t >= lutT[last]) return lutTh[last];
+    let i = 1;
+    while (i <= last && lutT[i] < t) i++;
+    const t0 = lutT[i - 1];
+    const t1 = lutT[i];
+    const th0 = lutTh[i - 1];
+    const th1 = lutTh[i];
+    return th0 + ((t - t0) / (t1 - t0)) * (th1 - th0);
+  }
+
+  function sinP(t) { return Math.sin(t + phi); }
+  function cosP(t) { return Math.cos(t + phi); }
+
+  function fmtComplex(re, im) {
+    const a = re.toFixed(3);
+    const b = Math.abs(im).toFixed(3);
+    const sign = im >= 0 ? "+" : "−";
+    return a + " " + sign + " " + b + "i";
+  }
+
+  function updateEulerReadout(alpha, amp) {
+    if (!showEuler) return;
+    const c = Math.cos(alpha);
+    const s = Math.sin(alpha);
+    const deg = (alpha * 180) / Math.PI;
+    document.getElementById("eulerAlpha").textContent =
+      alpha.toFixed(3) + " rad (" + deg.toFixed(1) + "°)";
+    document.getElementById("eulerRect").textContent = fmtComplex(c, s);
+    document.getElementById("eulerZ").textContent = fmtComplex(amp * c, amp * s);
+    document.getElementById("eulerMod").textContent =
+      amp % 1 === 0 ? String(amp) : amp.toFixed(2);
+  }
+
+  function updateLegend() {
+    document.querySelectorAll("#legend [data-show]").forEach((el) => {
+      const ok = el.getAttribute("data-show").split(/\s+/).includes(mode);
+      el.style.display = ok ? "inline-flex" : "none";
+    });
+  }
+
+  function maxTheta() {
+    return numRevs * TWO_PI;
+  }
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(320, Math.floor(rect.width * dpr));
+    const h = Math.floor((w / 1000) * 760);
+    canvas.width = w;
+    canvas.height = Math.max(400, h);
+  }
+
+  /** Bottom padding under θ-graph so tick row + title row never overlap */
+  function thetaAxisBottomPad() {
+    return 52 * dpr;
+  }
+
+  function getLayout(w, h) {
+    const pad = 16 * dpr;
+    const axisPad = thetaAxisBottomPad();
+    const topH = h * 0.56;
+    const circleR = Math.min((topH - pad * 2 - axisPad * 0.25) * 0.38, w * 0.2);
+    const cx = pad + circleR * 1.35;
+    const cy = topH / 2;
+    const waveLeft = cx + circleR + 40 * dpr;
+    const waveRight = w - pad;
+    const waveW = waveRight - waveLeft;
+    const plotMidY = topH / 2;
+    const plotH = Math.min(topH * 0.42, circleR * 2.15);
+    const timeTop = topH + 8 * dpr;
+    const timeBot = h - pad;
+    return { pad, circleR, cx, cy, waveLeft, waveRight, waveW, plotMidY, plotH, topH, timeTop, timeBot, axisPad };
+  }
+
+  function formatTickAngle(rad) {
+    if (!useDegrees) {
+      if (Math.abs(rad) < 1e-6) return "0";
+      const halfPi = Math.PI / 2;
+      const table = [
+        [1, "π/2"],
+        [2, "π"],
+        [3, "3π/2"],
+        [4, "2π"],
+        [5, "5π/2"],
+        [6, "3π"],
+        [7, "7π/2"],
+        [8, "4π"],
+        [9, "9π/2"],
+        [10, "5π"],
+        [11, "11π/2"],
+        [12, "6π"],
+        [13, "13π/2"],
+        [14, "7π"],
+        [15, "15π/2"],
+        [16, "8π"]
+      ];
+      const n = Math.round(rad / halfPi);
+      const err = Math.abs(rad - n * halfPi);
+      if (err < 1e-4 && n >= 0 && n <= 16) {
+        if (n === 0) return "0";
+        const row = table.find((r) => r[0] === n);
+        if (row) return row[1];
+      }
+      if (Math.abs(rad - TWO_PI) < 1e-6) return "2π";
+      if (Math.abs(rad - 4 * Math.PI) < 1e-6) return "4π";
+      if (Math.abs(rad - 6 * Math.PI) < 1e-6) return "6π";
+      if (Math.abs(rad - Math.PI) < 1e-6) return "π";
+      if (Math.abs(rad - 3 * Math.PI) < 1e-6) return "3π";
+      if (Math.abs(rad - 5 * Math.PI) < 1e-6) return "5π";
+      return (rad / Math.PI).toFixed(2).replace(/\.?0+$/, "") + "π";
+    }
+    const deg = Math.round((rad * 180) / Math.PI);
+    return deg + "°";
+  }
+
+  function drawThetaTicks(L, scaleX, botY) {
+    const tickY = botY + 14 * dpr;
+    const majors = [];
+    for (let k = 0; k <= numRevs * 4; k++) {
+      const rad = (k * Math.PI) / 2;
+      if (rad > maxTheta() + 1e-6) break;
+      majors.push(rad);
+    }
+    ctx.fillStyle = "rgba(232,238,244,0.6)";
+    ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    majors.forEach((rad) => {
+      const x = L.waveLeft + rad * scaleX;
+      ctx.beginPath();
+      ctx.moveTo(x, botY);
+      ctx.lineTo(x, botY + 5 * dpr);
+      ctx.strokeStyle = COL.axis;
+      ctx.lineWidth = 1 * dpr;
+      ctx.stroke();
+      const label = formatTickAngle(rad);
+      ctx.fillText(label, x, tickY);
+    });
+  }
+
+  function draw() {
+    const w = canvas.width;
+    const h = canvas.height;
+    const L = getLayout(w, h);
+    ctx.fillStyle = "#1a2332";
+    ctx.fillRect(0, 0, w, h);
+
+    const r = L.circleR * amplitude;
+    const maxT = maxTheta();
+    const theta = thetaAccum;
+    const angleOnCircle = theta + phi;
+
+    const px = L.cx + r * Math.cos(angleOnCircle);
+    const py = L.cy - r * Math.sin(angleOnCircle);
+
+    // —— Unit circle ——
+    ctx.strokeStyle = COL.faint;
+    ctx.lineWidth = dpr;
+    ctx.beginPath();
+    ctx.arc(L.cx, L.cy, r, 0, TWO_PI);
+    ctx.stroke();
+
+    ctx.strokeStyle = COL.axis;
+    ctx.lineWidth = 1 * dpr;
+    const ax = r + 12 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(L.cx - ax, L.cy);
+    ctx.lineTo(L.cx + ax, L.cy);
+    ctx.moveTo(L.cx, L.cy - ax);
+    ctx.lineTo(L.cx, L.cy + ax);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(232,238,244,0.5)";
+    ctx.font = `${12 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    const rLab = amplitude % 1 === 0 ? String(amplitude) : amplitude.toFixed(2);
+    ctx.fillText(rLab, L.cx + r + 8 * dpr, L.cy + 4 * dpr);
+    ctx.textAlign = "right";
+    ctx.fillText(rLab, L.cx - 4 * dpr, L.cy - r - 4 * dpr);
+
+    const arcEnd = angleOnCircle % TWO_PI;
+    if (arcEnd > 0.02) {
+      ctx.strokeStyle = "rgba(61,158,255,0.5)";
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath();
+      ctx.arc(L.cx, L.cy, 22 * dpr, -arcEnd, 0, false);
+      ctx.stroke();
+    }
+
+    ctx.setLineDash([4 * dpr, 4 * dpr]);
+    ctx.strokeStyle = "rgba(255,107,107,0.35)";
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px, L.cy);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(78,205,196,0.35)";
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(L.cx, py);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = "rgba(232,238,244,0.85)";
+    ctx.lineWidth = 2 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(L.cx, L.cy);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+
+    ctx.fillStyle = "#e8eef4";
+    ctx.beginPath();
+    ctx.arc(px, py, 5 * dpr, 0, TWO_PI);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(232,238,244,0.7)";
+    ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "left";
+    ctx.fillText("θ+φ", px + 8 * dpr, py - 8 * dpr);
+
+    if (showEuler) {
+      ctx.fillStyle = "rgba(61,158,255,0.9)";
+      ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.fillText("Re", L.cx + ax - 6 * dpr, L.cy + 18 * dpr);
+      ctx.textAlign = "right";
+      ctx.fillText("Im", L.cx - 4 * dpr, L.cy - ax + 4 * dpr);
+      ctx.textAlign = "left";
+      ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+      ctx.fillStyle = "rgba(61,158,255,0.75)";
+      ctx.fillText("z = r e^{i\u03B1}", L.cx - r, L.cy + r + 38 * dpr);
+    }
+
+    // —— θ wave plot ——
+    const topY = L.plotMidY - L.plotH / 2;
+    const botY = L.plotMidY + L.plotH / 2;
+    const scaleX = L.waveW / maxT;
+    const scaleY = (L.plotH * 0.42) / Math.max(amplitude, 0.5);
+
+    ctx.strokeStyle = COL.grid;
+    ctx.lineWidth = 1 * dpr;
+    for (let g = -1; g <= 1; g += 0.5) {
+      const yy = L.plotMidY - g * scaleY * amplitude;
+      ctx.beginPath();
+      ctx.moveTo(L.waveLeft, yy);
+      ctx.lineTo(L.waveRight, yy);
+      ctx.stroke();
+    }
+    ctx.strokeStyle = "rgba(61,158,255,0.2)";
+    ctx.setLineDash([3 * dpr, 5 * dpr]);
+    [-1, 1].forEach((sgn) => {
+      const yy = L.plotMidY - sgn * amplitude * scaleY;
+      ctx.beginPath();
+      ctx.moveTo(L.waveLeft, yy);
+      ctx.lineTo(L.waveRight, yy);
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    for (let k = 1; k <= numRevs; k++) {
+      const xk = L.waveLeft + k * TWO_PI * scaleX;
+      ctx.beginPath();
+      ctx.moveTo(xk, topY - 6 * dpr);
+      ctx.lineTo(xk, botY + 6 * dpr);
+      ctx.stroke();
+    }
+
+    function drawFaintWave(fn, color) {
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.12;
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.beginPath();
+      const steps = 200;
+      for (let i = 0; i <= steps; i++) {
+        const t = (i / steps) * maxT;
+        const x = L.waveLeft + t * scaleX;
+        const y = L.plotMidY - amplitude * fn(t) * scaleY;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    if (mode === "sin" || mode === "both") drawFaintWave(sinP, COL.sin);
+    if (mode === "cos" || mode === "both") drawFaintWave(cosP, COL.cos);
+
+    ctx.strokeStyle = COL.axis;
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(L.waveLeft, L.plotMidY);
+    ctx.lineTo(L.waveRight, L.plotMidY);
+    ctx.stroke();
+
+    ctx.strokeStyle = COL.faint;
+    ctx.strokeRect(L.waveLeft, topY, L.waveW, botY - topY);
+
+    function drawProgress(fn, color) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5 * dpr;
+      ctx.beginPath();
+      const steps = Math.max(30, Math.ceil(theta / 0.05));
+      for (let i = 0; i <= steps; i++) {
+        const t = (i / steps) * theta;
+        const x = L.waveLeft + t * scaleX;
+        const y = L.plotMidY - amplitude * fn(t) * scaleY;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    if (mode === "sin" || mode === "both") drawProgress(sinP, COL.sin);
+    if (mode === "cos" || mode === "both") drawProgress(cosP, COL.cos);
+
+    const tx = L.waveLeft + theta * scaleX;
+    if (mode === "sin" || mode === "both") {
+      const sy = L.plotMidY - amplitude * sinP(theta) * scaleY;
+      ctx.fillStyle = COL.sin;
+      ctx.beginPath();
+      ctx.arc(tx, sy, 5 * dpr, 0, TWO_PI);
+      ctx.fill();
+    }
+    if (mode === "cos" || mode === "both") {
+      const cy_ = L.plotMidY - amplitude * cosP(theta) * scaleY;
+      ctx.fillStyle = COL.cos;
+      ctx.beginPath();
+      ctx.arc(tx, cy_, 5 * dpr, 0, TWO_PI);
+      ctx.fill();
+    }
+
+    ctx.setLineDash([6 * dpr, 6 * dpr]);
+    ctx.lineWidth = 1 * dpr;
+    if (mode === "sin" || mode === "both") {
+      ctx.strokeStyle = mode === "both" ? "rgba(255,107,107,0.22)" : "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(tx, L.plotMidY - amplitude * sinP(theta) * scaleY);
+      ctx.stroke();
+    }
+    if (mode === "cos" || mode === "both") {
+      ctx.strokeStyle = mode === "both" ? "rgba(78,205,196,0.22)" : "rgba(255,255,255,0.18)";
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(tx, L.plotMidY - amplitude * cosP(theta) * scaleY);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    ctx.save();
+    ctx.translate(L.waveLeft - 14 * dpr, L.plotMidY);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(232,238,244,0.55)";
+    ctx.font = `${12 * dpr}px system-ui, sans-serif`;
+    const vLab = mode === "sin" ? "sin(θ+φ)" : mode === "cos" ? "cos(θ+φ)" : "sin, cos";
+    ctx.fillText(vLab, 0, 0);
+    ctx.restore();
+
+    drawThetaTicks(L, scaleX, botY);
+
+    const axisTitleY = botY + 34 * dpr;
+    ctx.fillStyle = "rgba(232,238,244,0.55)";
+    ctx.font = `${12 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText(useDegrees ? "θ (degrees at ticks)" : "θ (radians)", (L.waveLeft + L.waveRight) / 2, axisTitleY);
+
+    // Section divider + time plot label
+    ctx.strokeStyle = COL.border;
+    ctx.lineWidth = 1 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(L.pad, L.topH);
+    ctx.lineTo(w - L.pad, L.topH);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(232,238,244,0.45)";
+    ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "left";
+    ctx.fillText("r = " + amplitude.toFixed(2), L.cx - r, L.cy + r + 22 * dpr);
+
+    // —— Lower: θ(t)=∫ω dt and ω(t) — same simulation time t as upper graph ——
+    const tLeft = L.pad + 8 * dpr;
+    const tRight = w - L.pad;
+    const tW = tRight - tLeft;
+    const tw = Math.min(38, Math.max(timeAxisSec(), timeT * 1.08 + 0.25));
+    const scaleXt = tW / tw;
+    const maxTRad = maxTheta();
+    const thetaLUT = buildThetaLUT(tw, Math.ceil(tw * 28));
+    const thEndWindow = thetaLUT.lutTh[thetaLUT.lutTh.length - 1];
+    const thetaMaxScale = Math.max(maxTRad, thEndWindow, thetaAccum) * 1.04;
+
+    const bottomReserve = 34 * dpr;
+    const stackBot = L.timeBot - bottomReserve;
+    const gapPlots = 10 * dpr;
+    ctx.fillStyle = "rgba(232,238,244,0.42)";
+    ctx.textAlign = "left";
+    ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    ctx.fillText(
+      "Time domain — dθ/dt = ω(t); θ(t) = ∫ω dt. Completing " + numRevs + " rev resets t and θ to 0.",
+      tLeft,
+      L.timeTop + 4 * dpr
+    );
+
+    const plotStackTop = L.timeTop + 22 * dpr;
+    const stackH = stackBot - plotStackTop;
+    const omH = Math.min(56 * dpr, Math.max(44 * dpr, stackH * 0.26));
+    const thH = Math.max(72 * dpr, stackH - omH - gapPlots);
+    const thRectTop = plotStackTop;
+    const thRectBot = thRectTop + thH;
+    const omRectTop = thRectBot + gapPlots;
+    const omRectBot = omRectTop + omH;
+
+    function yTheta(th) {
+      return thRectBot - (th / thetaMaxScale) * (thRectBot - thRectTop);
+    }
+    const omegaYMax = Math.max(1.2, omegaMaxOnWindow(tw));
+    function yOmega(om) {
+      return omRectBot - (om / omegaYMax) * (omRectBot - omRectTop);
+    }
+
+    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(232,238,244,0.48)";
+    ctx.fillText(
+      "θ(t) — ∫ω dt; horizontal span " + tw.toFixed(2) + " s (grows if one θ-cycle takes longer)",
+      tLeft,
+      thRectTop - 3 * dpr
+    );
+
+    ctx.strokeStyle = COL.grid;
+    ctx.lineWidth = 1 * dpr;
+    for (let k = 0; k <= numRevs; k++) {
+      const th = k * TWO_PI;
+      if (th > thetaMaxScale * 1.001) break;
+      const yy = yTheta(th);
+      ctx.beginPath();
+      ctx.moveTo(tLeft, yy);
+      ctx.lineTo(tRight, yy);
+      ctx.stroke();
+    }
+    for (let k = 1; k < numRevs; k++) {
+      const xk = tLeft + (k / numRevs) * tW;
+      ctx.beginPath();
+      ctx.moveTo(xk, thRectTop);
+      ctx.lineTo(xk, thRectBot);
+      ctx.stroke();
+    }
+
+    ctx.strokeStyle = "rgba(61,158,255,0.2)";
+    ctx.lineWidth = 2 * dpr;
+    ctx.beginPath();
+    const rampSteps = 140;
+    for (let i = 0; i <= rampSteps; i++) {
+      const t = (i / rampSteps) * tw;
+      const th = thetaFromLUT(thetaLUT, t);
+      const x = tLeft + t * scaleXt;
+      const y = yTheta(th);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(126,200,255,0.95)";
+    ctx.lineWidth = 2.5 * dpr;
+    ctx.beginPath();
+    const progSteps = Math.max(16, Math.ceil((timeT / tw) * 100));
+    for (let i = 0; i <= progSteps; i++) {
+      const t = (i / progSteps) * timeT;
+      const th = i === progSteps ? thetaAccum : thetaFromLUT(thetaLUT, t);
+      const x = tLeft + t * scaleXt;
+      const y = yTheta(th);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "#7ec8ff";
+    ctx.beginPath();
+    ctx.arc(tLeft + timeT * scaleXt, yTheta(thetaAccum), 5 * dpr, 0, TWO_PI);
+    ctx.fill();
+
+    ctx.strokeStyle = COL.faint;
+    ctx.lineWidth = 1 * dpr;
+    ctx.strokeRect(tLeft, thRectTop, tW, thRectBot - thRectTop);
+
+    ctx.save();
+    ctx.translate(tLeft - 18 * dpr, (thRectTop + thRectBot) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(232,238,244,0.55)";
+    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+    ctx.fillText("θ (rad)", 0, 0);
+    ctx.restore();
+
+    const omNow = omegaAt(timeT);
+    ctx.fillStyle = "rgba(232,238,244,0.48)";
+    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "left";
+    ctx.fillText(
+      omegaVarDepth < 0.01 ? "ω(t) — constant (raise variation for ramp / sinusoid)" : "ω(t) — instantaneous angular frequency (rad/s)",
+      tLeft,
+      omRectTop - 3 * dpr
+    );
+
+    ctx.strokeStyle = COL.grid;
+    [0, omegaYMax * 0.5, omegaYMax].forEach((om) => {
+      const yy = yOmega(om);
+      ctx.beginPath();
+      ctx.moveTo(tLeft, yy);
+      ctx.lineTo(tRight, yy);
+      ctx.stroke();
+    });
+
+    ctx.strokeStyle = COL.faint;
+    ctx.strokeRect(tLeft, omRectTop, tW, omRectBot - omRectTop);
+
+    ctx.strokeStyle = "rgba(200,232,120,0.22)";
+    ctx.lineWidth = 3 * dpr;
+    ctx.beginPath();
+    const omSteps = 100;
+    for (let i = 0; i <= omSteps; i++) {
+      const t = (i / omSteps) * tw;
+      const x = tLeft + t * scaleXt;
+      const y = yOmega(omegaAt(t));
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(200,232,120,0.95)";
+    ctx.lineWidth = 2 * dpr;
+    ctx.beginPath();
+    const omProg = Math.max(8, Math.ceil((timeT / tw) * 80));
+    for (let i = 0; i <= omProg; i++) {
+      const t = (i / omProg) * timeT;
+      const x = tLeft + t * scaleXt;
+      const y = yOmega(omegaAt(t));
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.fillStyle = "#c8e86c";
+    ctx.beginPath();
+    ctx.arc(tLeft + timeT * scaleXt, yOmega(omNow), 4.5 * dpr, 0, TWO_PI);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(232,238,244,0.5)";
+    ctx.font = `${9 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "right";
+    ctx.fillText("ω(t) = " + omNow.toFixed(2) + " rad/s", tRight - 6 * dpr, yOmega(omNow) - 6 * dpr);
+
+    ctx.save();
+    ctx.translate(tLeft - 18 * dpr, (omRectTop + omRectBot) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(232,238,244,0.55)";
+    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+    ctx.fillText("ω (rad/s)", 0, 0);
+    ctx.restore();
+
+    ctx.fillStyle = "rgba(232,238,244,0.55)";
+    ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.fillText("t (s)", (tLeft + tRight) / 2, L.timeBot - 4 * dpr);
+    ctx.textAlign = "left";
+    ctx.fillText("0", tLeft, L.timeBot - 18 * dpr);
+    ctx.textAlign = "right";
+    ctx.fillText(tw.toFixed(2), tRight, L.timeBot - 18 * dpr);
+
+    updateEulerReadout(angleOnCircle, amplitude);
+  }
+
+  function tick(now) {
+    const dt = Math.min(0.05, (now - lastT) / 1000);
+    lastT = now;
+    if (playing) {
+      const dts = speedMul * dt;
+      const omMid = omegaAt(timeT + 0.5 * dts);
+      thetaAccum += omMid * dts;
+      timeT += dts;
+      while (thetaAccum >= maxTheta()) {
+        thetaAccum -= maxTheta();
+        timeT = 0;
+      }
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  function setPlayUi() {
+    const btn = document.getElementById("playPause");
+    btn.textContent = playing ? "Pause" : "Play";
+    btn.setAttribute("aria-pressed", playing ? "true" : "false");
+  }
+
+  document.querySelectorAll('input[name="mode"]').forEach((el) => {
+    el.addEventListener("change", () => {
+      if (el.checked) {
+        mode = el.value;
+        updateLegend();
+      }
+    });
+  });
+  updateLegend();
+
+  document.getElementById("eulerToggle").addEventListener("change", (e) => {
+    showEuler = e.target.checked;
+    document.getElementById("eulerPanel").classList.toggle("hidden", !showEuler);
+  });
+
+  document.querySelectorAll('input[name="angUnit"]').forEach((el) => {
+    el.addEventListener("change", () => {
+      if (el.checked) useDegrees = el.value === "deg";
+    });
+  });
+
+  document.getElementById("playPause").addEventListener("click", () => {
+    playing = !playing;
+    setPlayUi();
+  });
+  setPlayUi();
+
+  document.getElementById("stepBtn").addEventListener("click", () => {
+    let remaining = THETA_STEP;
+    const mt = maxTheta();
+    while (remaining > 1e-14) {
+      if (thetaAccum >= mt - 1e-12) {
+        thetaAccum = 0;
+        timeT = 0;
+      }
+      const room = Math.max(0, mt - thetaAccum);
+      const chunk = Math.min(remaining, room);
+      if (chunk < 1e-14) {
+        thetaAccum = 0;
+        timeT = 0;
+        continue;
+      }
+      const om0 = Math.max(0.12, omegaAt(timeT));
+      const omMid = Math.max(0.12, omegaAt(timeT + chunk / (2 * om0)));
+      thetaAccum += chunk;
+      timeT += chunk / omMid;
+      remaining -= chunk;
+      if (thetaAccum >= mt - 1e-10) {
+        thetaAccum = 0;
+        timeT = 0;
+      }
+    }
+  });
+
+  const phaseEl = document.getElementById("phase");
+  const phaseVal = document.getElementById("phaseVal");
+  function refreshPhaseLabel() {
+    phaseVal.textContent = phi === 0 ? "0" : phi.toFixed(2);
+  }
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    timeT = 0;
+    thetaAccum = 0;
+    phi = 0;
+    phaseEl.value = "0";
+    refreshPhaseLabel();
+    playing = false;
+    setPlayUi();
+  });
+
+  document.getElementById("startAgainBtn").addEventListener("click", () => {
+    playing = true;
+    setPlayUi();
+  });
+
+  const speedEl = document.getElementById("speed");
+  const speedVal = document.getElementById("speedVal");
+  speedEl.addEventListener("input", () => {
+    speedMul = parseFloat(speedEl.value);
+    speedVal.textContent = speedMul.toFixed(2) + "×";
+  });
+
+  const revsEl = document.getElementById("revs");
+  const revsVal = document.getElementById("revsVal");
+  revsEl.addEventListener("input", () => {
+    numRevs = parseInt(revsEl.value, 10);
+    revsVal.textContent = String(numRevs);
+    const mt = maxTheta();
+    thetaAccum = ((thetaAccum % mt) + mt) % mt;
+  });
+
+  const ampEl = document.getElementById("amplitude");
+  const ampVal = document.getElementById("ampVal");
+  ampEl.addEventListener("input", () => {
+    amplitude = parseFloat(ampEl.value);
+    ampVal.textContent = amplitude.toFixed(2);
+  });
+
+  phaseEl.addEventListener("input", () => {
+    phi = parseFloat(phaseEl.value);
+    refreshPhaseLabel();
+  });
+  refreshPhaseLabel();
+
+  const omegaEl = document.getElementById("omega");
+  const omegaVal = document.getElementById("omegaVal");
+  omegaEl.addEventListener("input", () => {
+    const old = omegaTime;
+    omegaTime = parseFloat(omegaEl.value);
+    omegaVal.textContent = omegaTime.toFixed(2);
+    if (old > 1e-6) timeT = timeT * (old / omegaTime);
+    const tw = timeAxisSec();
+    if (timeT > tw) timeT = tw;
+    if (timeT < 0) timeT = 0;
+  });
+
+  const omegaVarEl = document.getElementById("omegaVar");
+  const omegaVarValEl = document.getElementById("omegaVarVal");
+  omegaVarEl.addEventListener("input", () => {
+    omegaVarDepth = parseFloat(omegaVarEl.value);
+    omegaVarValEl.textContent = Math.round(omegaVarDepth * 100) + "%";
+  });
+  omegaVarValEl.textContent = Math.round(omegaVarDepth * 100) + "%";
+
+  document.getElementById("omegaPattern").addEventListener("change", (e) => {
+    omegaPattern = e.target.value;
+  });
+
+  document.getElementById("exportPng").addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.download = "unit-circle-waves.png";
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  });
+
+  const overlay = document.getElementById("overlay");
+  document.getElementById("helpOpen").addEventListener("click", () => overlay.classList.add("open"));
+  document.getElementById("helpClose").addEventListener("click", () => overlay.classList.remove("open"));
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.classList.remove("open");
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") overlay.classList.remove("open");
+  });
+
+  window.addEventListener("resize", () => {
+    resize();
+    draw();
+  });
+
+  resize();
+  requestAnimationFrame(tick);
+})();
+  </script>
+</body>
+</html>
