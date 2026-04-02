@@ -6,6 +6,13 @@ A self-contained web page that animates how sine and cosine arise from a radius 
 
 Open `index.html` in a modern desktop browser (Chrome, Edge, Firefox, Safari). No build step or server is required. If your browser blocks downloads when using `file://`, use a simple local server or open the file from disk as your environment allows.
 
+## Icon and logo
+
+- **`logo.svg`** — Vector logo (unit circle, radius, sine/cosine guide lines in app colours). Used in the page header and as the primary **favicon** (`rel="icon"`).
+- **`apple-touch-icon.png`** — 180×180 PNG for **Safari** and iOS when the user adds the page to the **Home Screen**, **Dock**, or bookmarks (linked via `rel="apple-touch-icon"`).
+
+Keep these files next to `index.html` so the links resolve. After adding to the Home Screen or Dock, Safari may cache the icon; reload or re-add if you change the artwork.
+
 ## What it shows
 
 1. **Unit circle (complex plane)**  
