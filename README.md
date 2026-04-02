@@ -8,10 +8,11 @@ Open `index.html` in a modern desktop browser (Chrome, Edge, Firefox, Safari). N
 
 ## Icon and logo
 
-- **`logo.svg`** — Vector logo (unit circle, radius, sine/cosine guide lines in app colours). Used in the page header and as the primary **favicon** (`rel="icon"`).
-- **`apple-touch-icon.png`** — 180×180 PNG for **Safari** and iOS when the user adds the page to the **Home Screen**, **Dock**, or bookmarks (linked via `rel="apple-touch-icon"`).
+- **`logo.svg`** — Vector logo in the page header; also listed as an SVG favicon for browsers that support it.
+- **`favicon-32.png`** / **`favicon-16.png`** — PNG favicons used first in `index.html` because **Safari often does not use SVG for the tab icon** (it may show “?”), especially with `file://` URLs.
+- **`apple-touch-icon.png`** — 180×180 PNG for **Safari** and iOS when the page is added to the **Home Screen** or **Dock** (`rel="apple-touch-icon"`).
 
-Keep these files next to `index.html` so the links resolve. After adding to the Home Screen or Dock, Safari may cache the icon; reload or re-add if you change the artwork.
+Keep these files next to `index.html`. If the tab icon stays wrong after changes, clear the cache or close and reopen the tab.
 
 ## What it shows
 
