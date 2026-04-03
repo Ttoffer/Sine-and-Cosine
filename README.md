@@ -22,9 +22,8 @@ Keep these files next to `index.html`. If the tab icon stays wrong after changes
 2. **Upper graph — sin(θ+φ) and cos(θ+φ) vs θ**  
    The horizontal axis is **θ** in radians (tick labels can be switched to degrees). The curves draw as **θ** advances. Faint “ghost” curves show the full cycle; vertical lines mark each **2π**. When **θ** reaches **(revolutions × 2π)**, **θ** and simulation time **t** reset so the pattern repeats.
 
-3. **Lower graphs — time domain**  
-   - **θ(t)** — cumulative angle **∫ ω(t) dt** (slope **dθ/dt = ω(t)**).  
-   - **ω(t)** — instantaneous angular frequency in rad/s. With **variation** at 0, **ω** is constant (flat line). With a **pattern**, **ω** can vary sinusoidally (FM-style) or ramp up/down each segment (segment length tied to a nominal full cycle at **ω base**).
+3. **Lower panel — traveling waves**  
+   Uses the **same ω** as the circle: **sin(x − ωt + φ)** and **cos(…)** versus horizontal phase **x**. While **Play** is on, peaks move **right** at that rate, so **f = ω / 2π** Hz (readout under **ω** and in the canvas caption) matches real-time motion. **Cycles across window** sets how many **2π** of **x** fit on screen (spatial density only). When the upper **θ** sweep resets after **revolutions per cycle**, **θ** and **t** jump back but the lower wave’s phase does not, so the strip stays smooth.
 
 4. **Optional “Euler / complex plane” panel**  
    Explains **z = r e^{iα}** with **α = θ + φ**, and shows live numeric values for **α**, **e^{iα}**, **z**, and **|z|**. When enabled, the circle is labelled **Re** / **Im**.
@@ -34,17 +33,15 @@ Keep these files next to `index.html`. If the tab icon stays wrong after changes
 | Control | Role |
 |--------|------|
 | **Show** | Sine only, cosine only, or both (colour-coded). |
-| **Pause / Play, Step θ** | Pause animation or advance **θ** in small steps (handles multiple revolutions per step correctly). |
-| **Reset (1, 0)** | **θ**, **t**, and **φ** to 0 (standard position on the circle), clears traces, pauses. |
+| **Pause / Play, Step θ** | Pause, or advance **θ** by a small angle while paused — each step also advances the lower wave’s phase by the same Δθ (= ω Δt), consistent with **ω**. |
+| **Reset (1, 0)** | **θ**, **t**, **φ**, and the travel phase to 0 (standard position on the circle), pauses. |
 | **Start again** | Resume playback. |
 | **Radians / Degrees** | Tick labels on the **θ**-axis only. |
-| **Rotation speed** | Scales how fast simulation time and **θ** advance (default **0.4×**). |
-| **Revolutions per cycle** | How many full turns before **θ** (and **t**) reset. |
+| **Revolutions per cycle** | How many full turns before **θ** (and **t**) reset (upper sweep only; lower wave phase is unchanged). |
+| **Cycles across window** | How many full periods **2π** of **x** fit horizontally in the lower panel. |
 | **Amplitude (r)** | Scales circle and wave heights together. |
 | **Phase φ** | Shifts the waves and rotates the radius on the circle. |
-| **ω base** | Centre angular frequency (rad/s); **dθ/dt = ω(t)**. |
-| **ω variation** | How much **ω** swings around the base (0 ⇒ constant **ω**). |
-| **ω vs time pattern** | Constant, sinusoidal **ω(t)**, or ramp **ω** up/down each segment. |
+| **ω** | Angular frequency (rad/s) for **dθ/dt** and the lower wave; readout shows **f = ω/2π** Hz. |
 | **Save PNG** | Downloads a snapshot of the canvas. |
 | **Show Euler…** | Toggles the complex-number panel and on-canvas **Re/Im** labels. |
 

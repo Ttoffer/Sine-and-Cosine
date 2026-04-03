@@ -195,8 +195,10 @@
     .swatch.sin { background: var(--sin); }
     .swatch.cos { background: var(--cos); }
     .swatch.period { background: rgba(255, 255, 255, 0.25); height: 8px; width: 2px; border-radius: 0; }
-    .swatch.theta-t { background: #7ec8ff; height: 3px; }
-    .swatch.omega-t { background: #c8e86c; height: 3px; }
+    .swatch.travel {
+      background: linear-gradient(90deg, var(--sin) 0%, var(--sin) 50%, var(--cos) 50%, var(--cos) 100%);
+      height: 3px;
+    }
 
     .overlay {
       position: fixed;
@@ -317,7 +319,7 @@
         <div class="btn-row">
           <button type="button" class="ctl primary" id="playPause" aria-pressed="false">Pause</button>
           <button type="button" class="ctl" id="stepBtn" title="Advance θ by one step">Step θ</button>
-          <button type="button" class="ctl" id="resetBtn" title="θ=0, φ=0: radius at (1,0); clear wave traces; pause">Reset (1, 0)</button>
+          <button type="button" class="ctl" id="resetBtn" title="θ=0, φ=0, travel phase=0: radius at (1,0); pause">Reset (1, 0)</button>
           <button type="button" class="ctl" id="startAgainBtn" title="Resume animation from current state">Start again</button>
         </div>
       </div>
@@ -326,13 +328,6 @@
         <div class="wave-mode">
           <label class="opt"><input type="radio" name="angUnit" value="rad" checked /> Radians</label>
           <label class="opt"><input type="radio" name="angUnit" value="deg" /> Degrees</label>
-        </div>
-      </div>
-      <div class="control-group">
-        <label for="speed">Rotation speed</label>
-        <div class="slider-row">
-          <input type="range" id="speed" min="0.15" max="3" step="0.05" value="0.4" />
-          <span class="val" id="speedVal">0.40×</span>
         </div>
       </div>
       <div class="control-group">
@@ -357,27 +352,19 @@
         </div>
       </div>
       <div class="control-group">
-        <label for="omega">ω base (rad/s), dθ/dt = ω(t)</label>
+        <label for="omega">ω (rad/s) — rotation &amp; lower traveling wave</label>
         <div class="slider-row">
           <input type="range" id="omega" min="0.5" max="4" step="0.05" value="1.5" />
           <span class="val" id="omegaVal">1.50</span>
         </div>
+        <span id="omegaFreqReadout" style="font-size:0.75rem;color:var(--muted);line-height:1.35;">f = ω/2π ≈ 0.239 Hz</span>
       </div>
       <div class="control-group">
-        <label for="omegaVar">ω variation (0 = constant)</label>
+        <label for="travelCycles">Cycles across window</label>
         <div class="slider-row">
-          <input type="range" id="omegaVar" min="0" max="0.95" step="0.05" value="0" />
-          <span class="val" id="omegaVarVal">0%</span>
+          <input type="range" id="travelCycles" min="1" max="8" step="1" value="4" />
+          <span class="val" id="travelCyclesVal">4</span>
         </div>
-      </div>
-      <div class="control-group">
-        <label for="omegaPattern">ω vs time pattern</label>
-        <select id="omegaPattern" style="padding:0.4rem 0.5rem;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:0.9rem;max-width:18rem;">
-          <option value="const" selected>Constant ω</option>
-          <option value="sine">Sinusoidal ω(t) (FM-style)</option>
-          <option value="chirpUp">Ramp ω up each segment</option>
-          <option value="chirpDown">Ramp ω down each segment</option>
-        </select>
       </div>
       <div class="control-group">
         <label>Export</label>
@@ -400,9 +387,8 @@
         <span class="eq">z = r e<sup>iα</sup> = r cos α + i r sin α</span>
         with <kbd>α = θ + φ</kbd> (same angle as on the diagram). Euler’s identity links rotation to cosine and sine:
         <span class="eq">e<sup>iα</sup> = cos α + i sin α</span>, so <kbd>Re(z) = r cos α</kbd> and <kbd>Im(z) = r sin α</kbd>
-        match the teal and coral projections. With time, <kbd>α(t) = ∫ω dt + φ</kbd> (or <kbd>ωt + φ</kbd> when ω is
-        constant) gives <span class="eq">z(t) = r e<sup>iα(t)</sup></span> — constant |z| = r; if ω varies, phase
-        advances faster or slower over time.
+        match the teal and coral projections. With time, <kbd>α(t) = ωt + φ</kbd> gives
+        <span class="eq">z(t) = r e<sup>iα(t)</sup></span> — constant |z| = r; phase advances at rate <kbd>ω</kbd>.
       </p>
       <div class="live" id="eulerLive">
         <div>α = <span id="eulerAlpha"></span></div>
@@ -418,8 +404,7 @@
         <span data-show="sin both"><i class="swatch sin"></i> sin(θ+φ)</span>
         <span data-show="cos both"><i class="swatch cos"></i> cos(θ+φ)</span>
         <span><i class="swatch period"></i> one period (2π along θ)</span>
-        <span><i class="swatch theta-t"></i> θ(t)=∫ω dt</span>
-        <span><i class="swatch omega-t"></i> ω(t)</span>
+        <span><i class="swatch travel"></i> traveling sin / cos (same ω, f = ω/2π)</span>
       </div>
     </div>
   </main>
@@ -439,31 +424,29 @@
         One full turn in θ is <strong>2π</strong> radians — that horizontal span is one wavelength.
       </p>
       <p>
-        The <strong>lower panels</strong> share the same simulation time <strong>t</strong> as the integration
-        <strong>dθ/dt = ω(t)</strong>, so <strong>θ(t) = ∫₀ᵗ ω(τ) dτ</strong> (when ω is constant this is
-        <strong>ωt</strong>). The <strong>top strip</strong> plots <strong>θ(t)</strong>; its slope at any instant
-        is <strong>ω(t)</strong>.         The <strong>bottom strip</strong> plots <strong>ω(t)</strong> — flat when ω is constant, or curved with
-        <strong>variation</strong> + <strong>pattern</strong> (sinusoidal FM, or ramp ω up/down each segment). For ramps,
-        the pattern repeats every <strong>T_nom ≈ (revolutions × 2π) / ω_base</strong> seconds — that is only how often
-        the ramp restarts, not necessarily when θ completes a cycle. When θ reaches <strong>revolutions × 2π</strong>,
-        both <strong>t</strong> and the displayed θ reset to 0. <strong>Pause</strong> and <strong>Step θ</strong> advance
-        θ and t together.
+        The <strong>upper θ-sweep</strong> uses <strong>dθ/dt = ω</strong> and resets when θ reaches
+        <strong>revolutions × 2π</strong>. The <strong>lower panel</strong> uses the <strong>same ω</strong> for the
+        scrolling phase: <strong>sin(x − ωt + φ)</strong> (and cos) vs horizontal phase <strong>x</strong> — peaks move
+        <strong>to the right</strong> in lockstep with how fast the circle turns. <strong>Frequency</strong> in hertz is
+        <strong>f = ω / 2π</strong> (shown under the ω slider and in the lower canvas caption). That is the true
+        cycles-per-second rate of rotation and of the scrolling pattern when playing. <strong>Cycles across
+        window</strong> sets how many 2π of <strong>x</strong> fit on screen (spatial density only).         <strong>Pause</strong>
+        freezes both. <strong>Step θ</strong> advances the upper <strong>θ</strong> by a small angle and advances the
+        lower panel’s scrolling phase by the same amount in radians (equivalent to advancing time by
+        Δ<strong>θ</strong>/ω), so both stay consistent with the same <strong>ω</strong>.
       </p>
       <p><strong>Controls</strong></p>
       <ul>
         <li><strong>Show</strong> — sine, cosine, or both.</li>
-        <li><strong>Playback</strong> — pause/resume; step advances θ by a fixed small amount.</li>
-        <li><strong>Reset (1, 0)</strong> — sets θ and t to 0, φ to 0 so the radius lies on the positive x-axis (x=1, y=0 on the unit circle), clears drawn waves, and pauses.</li>
+        <li><strong>Playback</strong> — pause/resume; step advances <strong>θ</strong> and the lower wave’s phase together (Δθ = ω Δt).</li>
+        <li><strong>Reset (1, 0)</strong> — sets θ, t, travel phase, and φ to 0 so the radius lies on the positive x-axis (x=1, y=0 on the unit circle), and pauses.</li>
         <li><strong>Start again</strong> — resumes playback from the current θ and t.</li>
         <li><strong>Angle axis</strong> — tick labels under the θ-graph in radians or degrees.</li>
-        <li><strong>Rotation speed</strong> — how fast θ advances (and time t on the lower graph).</li>
-        <li><strong>Revolutions per cycle</strong> — θ resets after this many turns.</li>
+        <li><strong>Revolutions per cycle</strong> — only the <strong>upper</strong> θ-sweep: when <strong>θ</strong> reaches this many full turns, <strong>θ</strong> and <strong>t</strong> go back to 0. The lower traveling wave keeps its phase (no jump).</li>
         <li><strong>Amplitude (r)</strong> — scales circle and wave heights.</li>
         <li><strong>Phase φ</strong> — horizontal shift of the waves; rotates the radius on the circle.</li>
-        <li><strong>ω base</strong> — centre angular frequency (rad/s); <strong>dθ/dt = ω(t)</strong>.</li>
-        <li><strong>ω variation</strong> — 0 keeps ω constant; larger values let the pattern swing ω up/down around the base.</li>
-        <li><strong>ω vs time pattern</strong> — constant; sinusoidal ω(t); or ramp ω up/down each segment (segment length
-          ≈ time for one full θ-cycle at ω base, used only to repeat the ramp).</li>
+        <li><strong>ω</strong> — angular frequency (rad/s) for <strong>dθ/dt</strong> and the lower traveling wave; readout shows <strong>f = ω/2π</strong> Hz.</li>
+        <li><strong>Cycles across window</strong> — how many full 2π of phase <strong>x</strong> fit across the lower panel.</li>
         <li><strong>Save PNG</strong> — download a snapshot of the canvas.</li>
         <li><strong>Show Euler / complex plane notes</strong> — optional panel and on-canvas Re/Im labels linking the circle to
           <strong>z = r e<sup>iα</sup></strong> and live numeric values.</li>
@@ -480,15 +463,14 @@
   const COL = { sin: "#ff6b6b", cos: "#4ecdc4", grid: "rgba(255,255,255,0.08)", axis: "rgba(255,255,255,0.35)", faint: "rgba(255,255,255,0.12)", border: "rgba(255,255,255,0.12)" };
 
   let mode = "both";
-  let speedMul = 0.4;
   let numRevs = 3;
   let amplitude = 1;
   let phi = 0;
   let omegaTime = 1.5;
-  let omegaVarDepth = 0;
-  let omegaPattern = "const";
   let timeT = 0;
   let thetaAccum = 0;
+  let travelPhase = 0;
+  let travelCyclesVisible = 4;
   let playing = true;
   let useDegrees = false;
   let showEuler = false;
@@ -497,82 +479,20 @@
   const TWO_PI = Math.PI * 2;
   const THETA_STEP = TWO_PI / 72;
 
-  function omegaMinApprox() {
-    const w0 = omegaTime;
-    const v = omegaVarDepth;
-    if (omegaPattern === "const" || v < 1e-6) return w0;
-    if (omegaPattern === "sine") return Math.max(0.2, w0 * (1 - v));
-    if (omegaPattern === "chirpUp" || omegaPattern === "chirpDown") return Math.max(0.2, w0 * (1 - v));
-    return w0 * (1 - v);
+  function maxSimTimeClamp() {
+    return Math.min(50, Math.max(4, (maxTheta() / Math.max(0.12, omegaTime)) * 2));
   }
 
-  /** ω(t) with t in simulation seconds (same t as lower graphs). Chirp ramps repeat every tNom ≈ maxTheta/w0. */
-  function omegaAt(t) {
-    const w0 = omegaTime;
-    const v = omegaVarDepth;
-    if (omegaPattern === "const" || v < 1e-6) return w0;
-    const tNom = Math.max(0.8, maxTheta() / w0);
-    if (omegaPattern === "sine") {
-      const Tp = Math.max(1.0, tNom / 2.2);
-      return w0 * (1 + v * Math.sin((TWO_PI * t) / Tp));
-    }
-    if (omegaPattern === "chirpUp") {
-      const u = (t % tNom) / tNom;
-      return w0 * (1 - v + v * 2 * u);
-    }
-    if (omegaPattern === "chirpDown") {
-      const u = (t % tNom) / tNom;
-      return w0 * (1 + v - v * 2 * u);
-    }
-    return w0;
+  function hzFromOmega(w) {
+    return w / TWO_PI;
   }
 
-  /** Horizontal span (s) for one lower-panel time axis */
-  function timeAxisSec() {
-    const mt = maxTheta();
-    const wmin = omegaMinApprox();
-    return Math.min(28, Math.max(3.5, (mt / wmin) * 1.28));
-  }
-
-  function omegaMaxOnWindow(tw) {
-    let mx = omegaTime;
-    const n = 64;
-    for (let i = 0; i <= n; i++) {
-      mx = Math.max(mx, omegaAt((i / n) * tw));
+  function refreshOmegaFreqReadout() {
+    const el = document.getElementById("omegaFreqReadout");
+    if (el) {
+      const f = hzFromOmega(omegaTime);
+      el.textContent = "f = ω/2π ≈ " + f.toFixed(3) + " Hz";
     }
-    return mx * 1.1;
-  }
-
-  /** Build θ(t)=∫ω dt from 0..tMax (one pass per frame for drawing) */
-  function buildThetaLUT(tMax, segments) {
-    const n = Math.max(24, Math.min(220, segments));
-    const lutT = [0];
-    const lutTh = [0];
-    let th = 0;
-    const dt = tMax / n;
-    for (let i = 1; i <= n; i++) {
-      const tPrev = (i - 1) * dt;
-      const tMid = tPrev + dt * 0.5;
-      const om = omegaAt(tMid);
-      th += om * dt;
-      lutT.push(i * dt);
-      lutTh.push(th);
-    }
-    return { lutT, lutTh };
-  }
-
-  function thetaFromLUT(lut, t) {
-    if (t <= 0) return 0;
-    const { lutT, lutTh } = lut;
-    const last = lutT.length - 1;
-    if (t >= lutT[last]) return lutTh[last];
-    let i = 1;
-    while (i <= last && lutT[i] < t) i++;
-    const t0 = lutT[i - 1];
-    const t1 = lutT[i];
-    const th0 = lutTh[i - 1];
-    const th1 = lutTh[i];
-    return th0 + ((t - t0) / (t1 - t0)) * (th1 - th0);
   }
 
   function sinP(t) { return Math.sin(t + phi); }
@@ -943,194 +863,117 @@
     ctx.textAlign = "left";
     ctx.fillText("r = " + amplitude.toFixed(2), L.cx - r, L.cy + r + 22 * dpr);
 
-    // —— Lower: θ(t)=∫ω dt and ω(t) — same simulation time t as upper graph ——
+    // —— Lower: traveling sin/cos vs phase x (independent of θ reset) ——
     const tLeft = L.pad + 8 * dpr;
     const tRight = w - L.pad;
     const tW = tRight - tLeft;
-    const tw = Math.min(38, Math.max(timeAxisSec(), timeT * 1.08 + 0.25));
-    const scaleXt = tW / tw;
-    const maxTRad = maxTheta();
-    const thetaLUT = buildThetaLUT(tw, Math.ceil(tw * 28));
-    const thEndWindow = thetaLUT.lutTh[thetaLUT.lutTh.length - 1];
-    const thetaMaxScale = Math.max(maxTRad, thEndWindow, thetaAccum) * 1.04;
+    const spanRad = travelCyclesVisible * TWO_PI;
 
     const bottomReserve = 34 * dpr;
     const stackBot = L.timeBot - bottomReserve;
-    const gapPlots = 10 * dpr;
+    const plotStackTop = L.timeTop + 26 * dpr;
+    const areaH = stackBot - plotStackTop;
+    const gapBands = mode === "both" ? 10 * dpr : 0;
+    let sinTop, sinBot, cosTop, cosBot;
+    if (mode === "both") {
+      const bandH = (areaH - gapBands) / 2;
+      sinTop = plotStackTop;
+      sinBot = sinTop + bandH;
+      cosTop = sinBot + gapBands;
+      cosBot = cosTop + bandH;
+    } else {
+      sinTop = plotStackTop;
+      sinBot = plotStackTop + areaH;
+      cosTop = sinTop;
+      cosBot = sinBot;
+    }
+
     ctx.fillStyle = "rgba(232,238,244,0.42)";
     ctx.textAlign = "left";
     ctx.font = `${11 * dpr}px system-ui, sans-serif`;
+    const fHz = hzFromOmega(omegaTime);
     ctx.fillText(
-      "Time domain — dθ/dt = ω(t); θ(t) = ∫ω dt. Completing " + numRevs + " rev resets t and θ to 0.",
+      "Traveling waves — same ω as circle: y = sin(x − ωt + φ); f = " +
+        fHz.toFixed(3) +
+        " Hz, ω = " +
+        omegaTime.toFixed(2) +
+        " rad/s; x spans " +
+        travelCyclesVisible +
+        "×2π",
       tLeft,
       L.timeTop + 4 * dpr
     );
 
-    const plotStackTop = L.timeTop + 22 * dpr;
-    const stackH = stackBot - plotStackTop;
-    const omH = Math.min(56 * dpr, Math.max(44 * dpr, stackH * 0.26));
-    const thH = Math.max(72 * dpr, stackH - omH - gapPlots);
-    const thRectTop = plotStackTop;
-    const thRectBot = thRectTop + thH;
-    const omRectTop = thRectBot + gapPlots;
-    const omRectBot = omRectTop + omH;
-
-    function yTheta(th) {
-      return thRectBot - (th / thetaMaxScale) * (thRectBot - thRectTop);
-    }
-    const omegaYMax = Math.max(1.2, omegaMaxOnWindow(tw));
-    function yOmega(om) {
-      return omRectBot - (om / omegaYMax) * (omRectBot - omRectTop);
+    function ampPxForBand(h) {
+      return Math.min(h * 0.38, 52 * dpr);
     }
 
-    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
-    ctx.fillStyle = "rgba(232,238,244,0.48)";
-    ctx.fillText(
-      "θ(t) — ∫ω dt; horizontal span " + tw.toFixed(2) + " s (grows if one θ-cycle takes longer)",
-      tLeft,
-      thRectTop - 3 * dpr
-    );
-
-    ctx.strokeStyle = COL.grid;
-    ctx.lineWidth = 1 * dpr;
-    for (let k = 0; k <= numRevs; k++) {
-      const th = k * TWO_PI;
-      if (th > thetaMaxScale * 1.001) break;
-      const yy = yTheta(th);
+    function drawTravelBand(top, bot, waveFn, color, yLabel) {
+      const midY = (top + bot) / 2;
+      const ap = ampPxForBand(bot - top);
+      ctx.strokeStyle = COL.axis;
+      ctx.lineWidth = 1 * dpr;
       ctx.beginPath();
-      ctx.moveTo(tLeft, yy);
-      ctx.lineTo(tRight, yy);
+      ctx.moveTo(tLeft, midY);
+      ctx.lineTo(tRight, midY);
       ctx.stroke();
-    }
-    for (let k = 1; k < numRevs; k++) {
-      const xk = tLeft + (k / numRevs) * tW;
+      for (let c = 1; c < travelCyclesVisible; c++) {
+        const xv = tLeft + (c / travelCyclesVisible) * tW;
+        ctx.strokeStyle = COL.grid;
+        ctx.beginPath();
+        ctx.moveTo(xv, top);
+        ctx.lineTo(xv, bot);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2.5 * dpr;
       ctx.beginPath();
-      ctx.moveTo(xk, thRectTop);
-      ctx.lineTo(xk, thRectBot);
+      const steps = 380;
+      for (let i = 0; i <= steps; i++) {
+        const u = i / steps;
+        const xRad = u * spanRad;
+        const x = tLeft + u * tW;
+        const val = waveFn(xRad - travelPhase + phi);
+        const y = midY - amplitude * val * ap;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
       ctx.stroke();
+      ctx.strokeStyle = COL.faint;
+      ctx.lineWidth = 1 * dpr;
+      ctx.strokeRect(tLeft, top, tW, bot - top);
+      ctx.save();
+      ctx.translate(tLeft - 16 * dpr, midY);
+      ctx.rotate(-Math.PI / 2);
+      ctx.textAlign = "center";
+      ctx.fillStyle = "rgba(232,238,244,0.55)";
+      ctx.font = `${10 * dpr}px system-ui, sans-serif`;
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
     }
 
-    ctx.strokeStyle = "rgba(61,158,255,0.2)";
-    ctx.lineWidth = 2 * dpr;
-    ctx.beginPath();
-    const rampSteps = 140;
-    for (let i = 0; i <= rampSteps; i++) {
-      const t = (i / rampSteps) * tw;
-      const th = thetaFromLUT(thetaLUT, t);
-      const x = tLeft + t * scaleXt;
-      const y = yTheta(th);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    if (mode === "sin") drawTravelBand(sinTop, sinBot, Math.sin, COL.sin, "sin");
+    else if (mode === "cos") drawTravelBand(cosTop, cosBot, Math.cos, COL.cos, "cos");
+    else {
+      drawTravelBand(sinTop, sinBot, Math.sin, COL.sin, "sin");
+      drawTravelBand(cosTop, cosBot, Math.cos, COL.cos, "cos");
     }
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(126,200,255,0.95)";
-    ctx.lineWidth = 2.5 * dpr;
-    ctx.beginPath();
-    const progSteps = Math.max(16, Math.ceil((timeT / tw) * 100));
-    for (let i = 0; i <= progSteps; i++) {
-      const t = (i / progSteps) * timeT;
-      const th = i === progSteps ? thetaAccum : thetaFromLUT(thetaLUT, t);
-      const x = tLeft + t * scaleXt;
-      const y = yTheta(th);
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-
-    ctx.fillStyle = "#7ec8ff";
-    ctx.beginPath();
-    ctx.arc(tLeft + timeT * scaleXt, yTheta(thetaAccum), 5 * dpr, 0, TWO_PI);
-    ctx.fill();
-
-    ctx.strokeStyle = COL.faint;
-    ctx.lineWidth = 1 * dpr;
-    ctx.strokeRect(tLeft, thRectTop, tW, thRectBot - thRectTop);
-
-    ctx.save();
-    ctx.translate(tLeft - 18 * dpr, (thRectTop + thRectBot) / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(232,238,244,0.55)";
-    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
-    ctx.fillText("θ (rad)", 0, 0);
-    ctx.restore();
-
-    const omNow = omegaAt(timeT);
-    ctx.fillStyle = "rgba(232,238,244,0.48)";
-    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
-    ctx.textAlign = "left";
-    ctx.fillText(
-      omegaVarDepth < 0.01 ? "ω(t) — constant (raise variation for ramp / sinusoid)" : "ω(t) — instantaneous angular frequency (rad/s)",
-      tLeft,
-      omRectTop - 3 * dpr
-    );
-
-    ctx.strokeStyle = COL.grid;
-    [0, omegaYMax * 0.5, omegaYMax].forEach((om) => {
-      const yy = yOmega(om);
-      ctx.beginPath();
-      ctx.moveTo(tLeft, yy);
-      ctx.lineTo(tRight, yy);
-      ctx.stroke();
-    });
-
-    ctx.strokeStyle = COL.faint;
-    ctx.strokeRect(tLeft, omRectTop, tW, omRectBot - omRectTop);
-
-    ctx.strokeStyle = "rgba(200,232,120,0.22)";
-    ctx.lineWidth = 3 * dpr;
-    ctx.beginPath();
-    const omSteps = 100;
-    for (let i = 0; i <= omSteps; i++) {
-      const t = (i / omSteps) * tw;
-      const x = tLeft + t * scaleXt;
-      const y = yOmega(omegaAt(t));
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-
-    ctx.strokeStyle = "rgba(200,232,120,0.95)";
-    ctx.lineWidth = 2 * dpr;
-    ctx.beginPath();
-    const omProg = Math.max(8, Math.ceil((timeT / tw) * 80));
-    for (let i = 0; i <= omProg; i++) {
-      const t = (i / omProg) * timeT;
-      const x = tLeft + t * scaleXt;
-      const y = yOmega(omegaAt(t));
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-    }
-    ctx.stroke();
-
-    ctx.fillStyle = "#c8e86c";
-    ctx.beginPath();
-    ctx.arc(tLeft + timeT * scaleXt, yOmega(omNow), 4.5 * dpr, 0, TWO_PI);
-    ctx.fill();
-
-    ctx.fillStyle = "rgba(232,238,244,0.5)";
-    ctx.font = `${9 * dpr}px system-ui, sans-serif`;
-    ctx.textAlign = "right";
-    ctx.fillText("ω(t) = " + omNow.toFixed(2) + " rad/s", tRight - 6 * dpr, yOmega(omNow) - 6 * dpr);
-
-    ctx.save();
-    ctx.translate(tLeft - 18 * dpr, (omRectTop + omRectBot) / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(232,238,244,0.55)";
-    ctx.font = `${10 * dpr}px system-ui, sans-serif`;
-    ctx.fillText("ω (rad/s)", 0, 0);
-    ctx.restore();
 
     ctx.fillStyle = "rgba(232,238,244,0.55)";
     ctx.font = `${11 * dpr}px system-ui, sans-serif`;
     ctx.textAlign = "center";
-    ctx.fillText("t (s)", (tLeft + tRight) / 2, L.timeBot - 4 * dpr);
-    ctx.textAlign = "left";
-    ctx.fillText("0", tLeft, L.timeBot - 18 * dpr);
-    ctx.textAlign = "right";
-    ctx.fillText(tw.toFixed(2), tRight, L.timeBot - 18 * dpr);
+    ctx.fillText("x (radians of phase along window)", (tLeft + tRight) / 2, L.timeBot - 4 * dpr);
+    ctx.font = `${9.5 * dpr}px system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(232,238,244,0.45)";
+    ctx.textAlign = "center";
+    for (let c = 0; c <= travelCyclesVisible; c++) {
+      const x = tLeft + (c / travelCyclesVisible) * tW;
+      let lab;
+      if (c === 0) lab = "0";
+      else if (c === travelCyclesVisible) lab = travelCyclesVisible + "×2π";
+      else lab = String(c * 2) + "π";
+      ctx.fillText(lab, x, L.timeBot - 18 * dpr);
+    }
 
     updateEulerReadout(angleOnCircle, amplitude);
   }
@@ -1139,10 +982,9 @@
     const dt = Math.min(0.05, (now - lastT) / 1000);
     lastT = now;
     if (playing) {
-      const dts = speedMul * dt;
-      const omMid = omegaAt(timeT + 0.5 * dts);
-      thetaAccum += omMid * dts;
-      timeT += dts;
+      thetaAccum += omegaTime * dt;
+      timeT += dt;
+      travelPhase += omegaTime * dt;
       while (thetaAccum >= maxTheta()) {
         thetaAccum -= maxTheta();
         timeT = 0;
@@ -1200,10 +1042,10 @@
         timeT = 0;
         continue;
       }
-      const om0 = Math.max(0.12, omegaAt(timeT));
-      const omMid = Math.max(0.12, omegaAt(timeT + chunk / (2 * om0)));
+      const om = Math.max(0.12, omegaTime);
       thetaAccum += chunk;
-      timeT += chunk / omMid;
+      timeT += chunk / om;
+      travelPhase += chunk;
       remaining -= chunk;
       if (thetaAccum >= mt - 1e-10) {
         thetaAccum = 0;
@@ -1221,6 +1063,7 @@
   document.getElementById("resetBtn").addEventListener("click", () => {
     timeT = 0;
     thetaAccum = 0;
+    travelPhase = 0;
     phi = 0;
     phaseEl.value = "0";
     refreshPhaseLabel();
@@ -1231,13 +1074,6 @@
   document.getElementById("startAgainBtn").addEventListener("click", () => {
     playing = true;
     setPlayUi();
-  });
-
-  const speedEl = document.getElementById("speed");
-  const speedVal = document.getElementById("speedVal");
-  speedEl.addEventListener("input", () => {
-    speedMul = parseFloat(speedEl.value);
-    speedVal.textContent = speedMul.toFixed(2) + "×";
   });
 
   const revsEl = document.getElementById("revs");
@@ -1268,23 +1104,22 @@
     const old = omegaTime;
     omegaTime = parseFloat(omegaEl.value);
     omegaVal.textContent = omegaTime.toFixed(2);
+    refreshOmegaFreqReadout();
     if (old > 1e-6) timeT = timeT * (old / omegaTime);
-    const tw = timeAxisSec();
+    const tw = maxSimTimeClamp();
     if (timeT > tw) timeT = tw;
     if (timeT < 0) timeT = 0;
   });
+  refreshOmegaFreqReadout();
 
-  const omegaVarEl = document.getElementById("omegaVar");
-  const omegaVarValEl = document.getElementById("omegaVarVal");
-  omegaVarEl.addEventListener("input", () => {
-    omegaVarDepth = parseFloat(omegaVarEl.value);
-    omegaVarValEl.textContent = Math.round(omegaVarDepth * 100) + "%";
+  const travelCyclesEl = document.getElementById("travelCycles");
+  const travelCyclesValEl = document.getElementById("travelCyclesVal");
+  travelCyclesEl.addEventListener("input", () => {
+    travelCyclesVisible = parseInt(travelCyclesEl.value, 10);
+    travelCyclesValEl.textContent = String(travelCyclesVisible);
   });
-  omegaVarValEl.textContent = Math.round(omegaVarDepth * 100) + "%";
-
-  document.getElementById("omegaPattern").addEventListener("change", (e) => {
-    omegaPattern = e.target.value;
-  });
+  travelCyclesVisible = parseInt(travelCyclesEl.value, 10);
+  travelCyclesValEl.textContent = String(travelCyclesVisible);
 
   document.getElementById("exportPng").addEventListener("click", () => {
     const a = document.createElement("a");
