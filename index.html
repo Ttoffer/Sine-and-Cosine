@@ -354,8 +354,8 @@
       <div class="control-group">
         <label for="omega">ω (rad/s) — rotation &amp; lower traveling wave</label>
         <div class="slider-row">
-          <input type="range" id="omega" min="0.5" max="4" step="0.05" value="1.5" />
-          <span class="val" id="omegaVal">1.50</span>
+          <input type="range" id="omega" min="0.5" max="6.35" step="0.001" value="1.5" />
+          <span class="val" id="omegaVal">1.500</span>
         </div>
         <span id="omegaFreqReadout" style="font-size:0.75rem;color:var(--muted);line-height:1.35;">f = ω/2π ≈ 0.239 Hz</span>
       </div>
@@ -445,7 +445,7 @@
         <li><strong>Revolutions per cycle</strong> — only the <strong>upper</strong> θ-sweep: when <strong>θ</strong> reaches this many full turns, <strong>θ</strong> and <strong>t</strong> go back to 0. The lower traveling wave keeps its phase (no jump).</li>
         <li><strong>Amplitude (r)</strong> — scales circle and wave heights.</li>
         <li><strong>Phase φ</strong> — horizontal shift of the waves; rotates the radius on the circle.</li>
-        <li><strong>ω</strong> — angular frequency (rad/s) for <strong>dθ/dt</strong> and the lower traveling wave; readout shows <strong>f = ω/2π</strong> Hz.</li>
+        <li><strong>ω</strong> — angular frequency (rad/s) for <strong>dθ/dt</strong> and the lower traveling wave; readout shows <strong>f = ω/2π</strong> Hz. Slide near the top: <strong>ω ≈ 2π ≈ 6.283</strong> rad/s gives <strong>1 Hz</strong> (one cycle per second).</li>
         <li><strong>Cycles across window</strong> — how many full 2π of phase <strong>x</strong> fit across the lower panel.</li>
         <li><strong>Save PNG</strong> — download a snapshot of the canvas.</li>
         <li><strong>Show Euler / complex plane notes</strong> — optional panel and on-canvas Re/Im labels linking the circle to
@@ -1103,7 +1103,7 @@
   omegaEl.addEventListener("input", () => {
     const old = omegaTime;
     omegaTime = parseFloat(omegaEl.value);
-    omegaVal.textContent = omegaTime.toFixed(2);
+    omegaVal.textContent = omegaTime.toFixed(3);
     refreshOmegaFreqReadout();
     if (old > 1e-6) timeT = timeT * (old / omegaTime);
     const tw = maxSimTimeClamp();

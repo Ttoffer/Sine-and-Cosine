@@ -41,7 +41,7 @@ Keep these files next to `index.html`. If the tab icon stays wrong after changes
 | **Cycles across window** | How many full periods **2π** of **x** fit horizontally in the lower panel. |
 | **Amplitude (r)** | Scales circle and wave heights together. |
 | **Phase φ** | Shifts the waves and rotates the radius on the circle. |
-| **ω** | Angular frequency (rad/s) for **dθ/dt** and the lower wave; readout shows **f = ω/2π** Hz. |
+| **ω** | Angular frequency (rad/s) for **dθ/dt** and the lower wave; readout shows **f = ω/2π** Hz. Slider goes up to **~6.35** rad/s with fine steps so you can set **ω ≈ 2π ≈ 6.283** rad/s for **1 Hz**. |
 | **Save PNG** | Downloads a snapshot of the canvas. |
 | **Show Euler…** | Toggles the complex-number panel and on-canvas **Re/Im** labels. |
 
