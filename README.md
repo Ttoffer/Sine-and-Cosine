@@ -1,57 +1,51 @@
-# Sine & cosine from the unit circle
+# Maths — Unit Circle Waves (HTML)
 
-A self-contained web page that animates how sine and cosine arise from a radius rotating on a circle, and how angle and angular frequency relate over time.
+This folder contains a **single static web page**, `index.html`, that shows how **sine** and **cosine** arise from a rotating radius on the unit circle and how that motion connects to travelling waves and complex numbers.
 
-## How to run
+The page is an **interactive trigonometry visualisation** linking the circle, the graphs of **sin** and **cos**, angular frequency **ω**, phase shift **φ**, and the complex-exponential form **z = r e<sup>iα</sup>**.
 
-Open `index.html` in a modern desktop browser (Chrome, Edge, Firefox, Safari). No build step or server is required. If your browser blocks downloads when using `file://`, use a simple local server or open the file from disk as your environment allows.
+## What the page covers
 
-## Icon and logo
+- **Unit circle motion** — a rotating radius with horizontal and vertical projections
+- **Sine and cosine graphs** — plotted against angle as the radius turns
+- **Travelling wave view** — showing how sinusoidal motion becomes a moving wave
+- **Angular frequency and phase** — how **ω** and **φ** affect the motion
+- **Euler / complex-plane connection** — relating the rotation to **z = r e<sup>iα</sup>**
+- **Multiple representations at once** — circle, graphs, and wave strip shown together
 
-- **`logo.svg`** — Vector logo in the page header; also listed as an SVG favicon for browsers that support it.
-- **`favicon-32.png`** / **`favicon-16.png`** — PNG favicons used first in `index.html` because **Safari often does not use SVG for the tab icon** (it may show “?”), especially with `file://` URLs.
-- **`apple-touch-icon.png`** — 180×180 PNG for **Safari** and iOS when the page is added to the **Home Screen** or **Dock** (`rel="apple-touch-icon"`).
+## Interactive features
 
-Keep these files next to `index.html`. If the tab icon stays wrong after changes, clear the cache or close and reopen the tab.
+- **Play / pause / step** controls for the angle animation
+- **Sine / cosine visibility** controls
+- **Radians / degrees** display switch for the angle axis
+- **Amplitude, phase, ω, cycles, and revolutions** sliders
+- **Reset** and **Start again** controls
+- **Save PNG** export option
+- **Optional Euler panel** and in-app help overlay
 
-## What it shows
+## How to view
 
-1. **Unit circle (complex plane)**  
-   A radius of length **r** starts on the positive **x**-axis and turns counter-clockwise. The tip is at angle **θ + φ** and position **(r cos(θ+φ), r sin(θ+φ))**. Faint lines show the vertical (sine) and horizontal (cosine) legs.
+Open `index.html` in any modern web browser. No build step or server is required, although a simple local server can help if a browser limits some `file://` behaviour.
 
-2. **Upper graph — sin(θ+φ) and cos(θ+φ) vs θ**  
-   The horizontal axis is **θ** in radians (tick labels can be switched to degrees). The curves draw as **θ** advances. Faint “ghost” curves show the full cycle; vertical lines mark each **2π**. When **θ** reaches **(revolutions × 2π)**, **θ** and simulation time **t** reset so the pattern repeats.
+If you later add or regenerate favicon and Apple-touch assets, keep them beside `index.html` so desktop browsers and Safari can find them correctly.
 
-3. **Lower panel — traveling waves**  
-   Uses the **same ω** as the circle: **sin(x − ωt + φ)** and **cos(…)** versus horizontal phase **x**. While **Play** is on, peaks move **right** at that rate, so **f = ω / 2π** Hz (readout under **ω** and in the canvas caption) matches real-time motion. **Cycles across window** sets how many **2π** of **x** fit on screen (spatial density only). When the upper **θ** sweep resets after **revolutions per cycle**, **θ** and **t** jump back but the lower wave’s phase does not, so the strip stays smooth.
+## Assets in this folder
 
-4. **Optional “Euler / complex plane” panel**  
-   Explains **z = r e^{iα}** with **α = θ + φ**, and shows live numeric values for **α**, **e^{iα}**, **z**, and **|z|**. When enabled, the circle is labelled **Re** / **Im**.
+| File | Purpose |
+|------|---------|
+| `index.html` | Main interactive page for unit-circle motion and wave graphs |
+| `README.md` | Project summary and usage notes |
+| `logo.svg` | Vector logo used in the header and as the SVG favicon |
+| `favicon-32.png` | 32 × 32 PNG favicon for browsers such as Safari |
+| `favicon-16.png` | 16 × 16 PNG favicon for smaller browser icon contexts |
+| `apple-touch-icon.png` | **180 × 180** icon for iPhone and iPad home-screen use |
 
-## Main controls (summary)
+## Notes
 
-| Control | Role |
-|--------|------|
-| **Show** | Sine only, cosine only, or both (colour-coded). |
-| **Pause / Play, Step θ** | Pause, or advance **θ** by a small angle while paused — each step also advances the lower wave’s phase by the same Δθ (= ω Δt), consistent with **ω**. |
-| **Reset (1, 0)** | **θ**, **t**, **φ**, and the travel phase to 0 (standard position on the circle), pauses. |
-| **Start again** | Resume playback. |
-| **Radians / Degrees** | Tick labels on the **θ**-axis only. |
-| **Revolutions per cycle** | How many full turns before **θ** (and **t**) reset (upper sweep only; lower wave phase is unchanged). |
-| **Cycles across window** | How many full periods **2π** of **x** fit horizontally in the lower panel. |
-| **Amplitude (r)** | Scales circle and wave heights together. |
-| **Phase φ** | Shifts the waves and rotates the radius on the circle. |
-| **ω** | Angular frequency (rad/s) for **dθ/dt** and the lower wave; readout shows **f = ω/2π** Hz. Slider goes up to **~6.35** rad/s with fine steps so you can set **ω ≈ 2π ≈ 6.283** rad/s for **1 Hz**. |
-| **Save PNG** | Downloads a snapshot of the canvas. |
-| **Show Euler…** | Toggles the complex-number panel and on-canvas **Re/Im** labels. |
+- The page is entirely client-side HTML, CSS, canvas, SVG, and JavaScript.
+- Safari tends to prefer the PNG favicon files over SVG for tab icons, which is why both PNG and SVG assets are included.
+- The content is intended for educational use in trigonometry, waves, and the link to complex exponentials.
 
-In-app **?** opens a fuller help overlay.
+---
 
-## Implementation
-
-- Single file: `index.html` (HTML, CSS, and JavaScript together).  
-- Drawing uses a **canvas**; layout is responsive to window width.
-
-## Licence / use
-
-Educational use. Adapt or redistribute as you prefer for teaching trigonometry, rotation, and the link to complex exponentials.
+*Educational summary only — intended as a visual explanation of sine, cosine, rotation, and their connection to waves and complex numbers.*
