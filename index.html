@@ -35,24 +35,25 @@
     header {
       padding: 1rem 1.25rem;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.75rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 0.75rem 1rem;
     }
     .header-brand {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
       gap: 0.75rem;
       min-width: 0;
     }
-    .app-logo {
-      width: 40px;
-      height: 40px;
-      flex-shrink: 0;
-      border-radius: 10px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+    .brand-logo {
+      width: min(320px, 72vw);
+      max-width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.4);
     }
     h1 {
       margin: 0;
@@ -299,7 +300,7 @@
 <body>
   <header>
     <div class="header-brand">
-      <img class="app-logo" src="logo.svg" width="40" height="40" alt="" decoding="async" />
+      <img class="brand-logo" src="header-logo.svg" width="320" height="88" alt="Hal AI by CJF" decoding="async" />
       <h1>Sine &amp; cosine from the unit circle</h1>
     </div>
     <button type="button" class="help-btn" id="helpOpen" aria-label="Help">?</button>

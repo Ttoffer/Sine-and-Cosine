@@ -35,7 +35,8 @@ If you later add or regenerate favicon and Apple-touch assets, keep them beside 
 |------|---------|
 | `index.html` | Main interactive page for unit-circle motion and wave graphs |
 | `README.md` | Project summary and usage notes |
-| `logo.svg` | Vector logo used in the header and as the SVG favicon |
+| `header-logo.svg` | Official rectangular Hal AI by CJF header logo used on the page |
+| `logo.svg` | Compact square SVG favicon/icon asset |
 | `favicon-32.png` | 32 × 32 PNG favicon for browsers such as Safari |
 | `favicon-16.png` | 16 × 16 PNG favicon for smaller browser icon contexts |
 | `apple-touch-icon.png` | **180 × 180** icon for iPhone and iPad home-screen use |
